@@ -1,0 +1,15 @@
+{
+  "name": "crypto-portfolio-dashboard",
+  "version": "1.0.0",
+  "description": "Local crypto portfolio dashboard: one Node process, no framework, no build step.",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "e2e": "node e2e/run.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

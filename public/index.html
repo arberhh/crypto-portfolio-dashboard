@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Crypto Portfolio</title>
+<style>
+  :root {
+    --bg: #0a0d12;
+    --panel: #10151d;
+    --panel-2: #141b25;
+    --border: #232b38;
+    --text: #e6ebf2;
+    --text-dim: #8a96a8;
+    --text-dimmer: #5c6779;
+    --accent: #5aa9ff;
+    --green: #33d17a;
+    --red: #ff5c72;
+    --amber: #f5b942;
+    --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius: 6px;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f6f9;
+      --panel: #ffffff;
+      --panel-2: #eef1f5;
+      --border: #dde3ea;
+      --text: #16202c;
+      --text-dim: #57687d;
+      --text-dimmer: #8c99ab;
+      --accent: #1868c9;
+      --green: #158b52;
+      --red: #cc2f47;
+      --amber: #a86a06;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0d12; --panel: #10151d; --panel-2: #141b25; --border: #232b38;
+    --text: #e6ebf2; --text-dim: #8a96a8; --text-dimmer: #5c6779;
+    --accent: #5aa9ff; --green: #33d17a; --red: #ff5c72; --amber: #f5b942;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6f9; --panel: #ffffff; --panel-2: #eef1f5; --border: #dde3ea;
+    --text: #16202c; --text-dim: #57687d; --text-dimmer: #8c99ab;
+    --accent: #1868c9; --green: #158b52; --red: #cc2f47; --amber: #a86a06;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.4;
+    min-height: 100vh;
+  }
+  .num, td.num, .mono {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  a { color: var(--accent); }
+
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 14px;
+  }
+  header.top h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0;
+  }
+  .status-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.live { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, var(--border)); }
+  .pill.stale { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, var(--border)); }
+  .pill.demo { color: var(--text-dim); border-color: var(--border); }
+  .pill.error { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, var(--border)); }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .stat {
+    background: var(--panel);
+    padding: 12px 14px;
+  }
+  .stat .label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dimmer);
+    margin-bottom: 6px;
+  }
+  .stat .value {
+    font-size: 20px;
+    font-weight: 600;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .flat { color: var(--text-dim); }
+  .up::before { content: "▲ "; font-size: 9px; }
+  .down::before { content: "▼ "; font-size: 9px; }
+
+  .warnings {
+    margin-bottom: 14px;
+  }
+  .warning-item {
+    background: color-mix(in srgb, var(--amber) 10%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--border));
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .warning-item::before { content: "⚠ "; color: var(--amber); }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+  }
+  .panel .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .panel-head h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  select, button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  select:focus-visible, button:focus-visible, th button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 760px; }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--panel-2);
+    text-align: right;
+    padding: 8px 10px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
+  thead th button {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  thead th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  thead th .arrow { font-size: 9px; opacity: 0.7; }
+
+  tbody td {
+    padding: 7px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td:first-child, tbody td:nth-child(2), tbody td:nth-child(3) { text-align: left; }
+  tbody tr:hover { background: var(--panel-2); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .sym { font-weight: 700; }
+  .platform-tag {
+    font-size: 10px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    vertical-align: middle;
+  }
+  .badge.est { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+  .badge.manual { background: color-mix(in srgb, var(--text-dim) 20%, transparent); color: var(--text-dim); }
+  .badge.stale { background: color-mix(in srgb, var(--amber) 20%, transparent); color: var(--amber); }
+
+  .chart-wrap { padding: 12px 14px; }
+  svg.chart { width: 100%; height: 220px; display: block; overflow: visible; }
+  .chart-empty { color: var(--text-dimmer); padding: 30px 0; text-align: center; font-size: 12px; }
+  .tooltip {
+    position: absolute;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: var(--mono);
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translate(-50%, -110%);
+    z-index: 10;
+  }
+  .chart-container { position: relative; }
+
+  footer.meta {
+    color: var(--text-dimmer);
+    font-size: 11px;
+    text-align: center;
+    padding: 12px 0 24px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .stat .value, .pill { transition: color 0.2s ease; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 10px; }
+    table { min-width: 620px; }
+    .stat .value { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Crypto Portfolio</h1>
+    <div class="status-line">
+      <span id="statusPill" class="pill live"><span class="dot"></span><span id="statusText">loading</span></span>
+      <span id="lastUpdated">—</span>
+    </div>
+  </header>
+
+  <div class="summary" id="summary">
+    <div class="stat"><div class="label">Total Value</div><div class="value" id="statValue">—</div></div>
+    <div class="stat"><div class="label">Total Cost</div><div class="value" id="statCost">—</div></div>
+    <div class="stat"><div class="label">P/L</div><div class="value" id="statPnl">—</div><div class="sub" id="statPnlPct"></div></div>
+    <div class="stat"><div class="label">Cost Coverage</div><div class="value" id="statCoverage">—</div><div class="sub">of value has known cost</div></div>
+  </div>
+
+  <div class="warnings" id="warnings"></div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Holdings</h2>
+      <div>
+        <label for="platformFilter" style="font-size:11px;color:var(--text-dim);margin-right:6px;">Platform</label>
+        <select id="platformFilter"><option value="">All</option></select>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="holdingsTable">
+        <thead>
+          <tr>
+            <th data-key="symbol"><button>Asset <span class="arrow"></span></button></th>
+            <th data-key="platform"><button>Platform <span class="arrow"></span></button></th>
+            <th data-key="priceStatus"><button>Source <span class="arrow"></span></button></th>
+            <th data-key="price"><button>Price <span class="arrow"></span></button></th>
+            <th data-key="change24h"><button>24h <span class="arrow"></span></button></th>
+            <th data-key="amount"><button>Amount <span class="arrow"></span></button></th>
+            <th data-key="value"><button>Value <span class="arrow"></span></button></th>
+            <th data-key="cost"><button>Cost <span class="arrow"></span></button></th>
+            <th data-key="pnl"><button>P/L <span class="arrow"></span></button></th>
+            <th data-key="pnlPct"><button>P/L % <span class="arrow"></span></button></th>
+            <th data-key="weight"><button>Weight <span class="arrow"></span></button></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Accumulated P/L</h2></div>
+    <div class="chart-wrap chart-container" id="chartWrap">
+      <div class="chart-empty">No history yet.</div>
+    </div>
+  </section>
+
+  <footer class="meta">Prices refresh lazily on the server; this page polls every 15s.</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var state = {
+    rows: [],
+    totals: null,
+    sortKey: 'value',
+    sortDir: 'desc',
+    platform: '',
+    history: [],
+  };
+
+  function fmtUsd(n, opts) {
+    if (n == null || !isFinite(n)) return '—';
+    opts = opts || {};
+    var abs = Math.abs(n);
+    var digits = opts.digits;
+    if (digits == null) {
+      digits = abs !== 0 && abs < 1 ? 6 : 2;
+    }
+    return (n < 0 ? '-' : '') + '$' + abs.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  }
+
+  function fmtPct(n) {
+    if (n == null || !isFinite(n)) return '—';
+    return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+  }
+
+  function fmtAmount(n) {
+    if (n == null) return '—';
+    var abs = Math.abs(n);
+    var digits = abs >= 1000 ? 2 : abs >= 1 ? 4 : 8;
+    return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: digits });
+  }
+
+  function pnlClass(n) {
+    if (n == null) return 'flat';
+    return n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
+  }
+
+  function setStatusPill(mode) {
+    var pill = document.getElementById('statusPill');
+    var text = document.getElementById('statusText');
+    pill.className = 'pill ' + (mode || 'live');
+    var labels = { live: 'Live', stale: 'Stale', demo: 'Demo', error: 'Error' };
+    text.textContent = labels[mode] || mode;
+  }
+
+  function renderSummary(totals, mode) {
+    document.getElementById('statValue').textContent = fmtUsd(totals.value);
+    document.getElementById('statCost').textContent = fmtUsd(totals.cost);
+    var pnlEl = document.getElementById('statPnl');
+    pnlEl.textContent = fmtUsd(totals.pnl);
+    pnlEl.className = 'value ' + pnlClass(totals.pnl);
+    document.getElementById('statPnlPct').textContent = totals.pnlPct != null ? fmtPct(totals.pnlPct) : 'no known-cost rows';
+    document.getElementById('statCoverage').textContent = (totals.coverage * 100).toFixed(1) + '%';
+  }
+
+  function renderWarnings(warnings) {
+    var el = document.getElementById('warnings');
+    el.innerHTML = '';
+    (warnings || []).forEach(function (w) {
+      var d = document.createElement('div');
+      d.className = 'warning-item';
+      d.textContent = w;
+      el.appendChild(d);
+    });
+  }
+
+  function populatePlatformFilter(rows) {
+    var sel = document.getElementById('platformFilter');
+    var existing = new Set(Array.from(sel.options).map(function (o) { return o.value; }));
+    var platforms = Array.from(new Set(rows.map(function (r) { return r.platform; }))).sort();
+    platforms.forEach(function (p) {
+      if (!existing.has(p)) {
+        var opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        sel.appendChild(opt);
+      }
+    });
+  }
+
+  function sortRows(rows) {
+    var key = state.sortKey, dir = state.sortDir === 'asc' ? 1 : -1;
+    return rows.slice().sort(function (a, b) {
+      var av = a[key], bv = b[key];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === 'string') return av.localeCompare(bv) * dir;
+      return (av - bv) * dir;
+    });
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    var rows = state.rows.filter(function (r) { return !state.platform || r.platform === state.platform; });
+    rows = sortRows(rows);
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+
+      var priceBadges = '';
+      if (r.priceStatus === 'manual') priceBadges += '<span class="badge manual">manual</span>';
+      if (r.priceStatus === 'stale') priceBadges += '<span class="badge stale">stale</span>';
+      var costBadge = r.costEstimated ? '<span class="badge est">est</span>' : (r.cost == null ? '<span class="badge manual">no cost</span>' : '');
+
+      tr.innerHTML =
+        '<td><span class="sym">' + esc(r.symbol) + '</span><div style="color:var(--text-dim);font-size:10.5px;">' + esc(r.name) + '</div></td>' +
+        '<td><span class="platform-tag">' + esc(r.platform) + '</span></td>' +
+        '<td>' + esc(r.priceSource || '—') + priceBadges + '</td>' +
+        '<td class="num">' + fmtUsd(r.price) + '</td>' +
+        '<td class="num ' + pnlClass(r.change24h) + '">' + fmtPct(r.change24h) + '</td>' +
+        '<td class="num">' + fmtAmount(r.amount) + '</td>' +
+        '<td class="num">' + fmtUsd(r.value) + '</td>' +
+        '<td class="num">' + fmtUsd(r.cost) + costBadge + '</td>' +
+        '<td class="num ' + pnlClass(r.pnl) + '">' + fmtUsd(r.pnl) + '</td>' +
+        '<td class="num ' + pnlClass(r.pnlPct) + '">' + fmtPct(r.pnlPct) + '</td>' +
+        '<td class="num">' + (r.weight != null ? (r.weight * 100).toFixed(1) + '%' : '—') + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  document.querySelectorAll('#holdingsTable thead th').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var key = th.getAttribute('data-key');
+      if (state.sortKey === key) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortKey = key;
+        state.sortDir = 'desc';
+      }
+      document.querySelectorAll('#holdingsTable thead .arrow').forEach(function (a) { a.textContent = ''; });
+      th.querySelector('.arrow').textContent = state.sortDir === 'asc' ? '▲' : '▼';
+      renderTable();
+    });
+  });
+
+  document.getElementById('platformFilter').addEventListener('change', function (e) {
+    state.platform = e.target.value;
+    renderTable();
+  });
+
+  function renderChart() {
+    var wrap = document.getElementById('chartWrap');
+    var points = state.history;
+    if (!points || points.length < 2) {
+      wrap.innerHTML = '<div class="chart-empty">Not enough history yet.</div>';
+      return;
+    }
+    var w = 1000, h = 220, padX = 10, padY = 16;
+    var pnls = points.map(function (p) { return p.pnl == null ? 0 : p.pnl; });
+    var min = Math.min.apply(null, pnls), max = Math.max.apply(null, pnls);
+    if (min === max) { min -= 1; max += 1; }
+    var ts = points.map(function (p) { return p.t; });
+    var tMin = Math.min.apply(null, ts), tMax = Math.max.apply(null, ts);
+    if (tMin === tMax) tMax = tMin + 1;
+
+    function xFor(t) { return padX + ((t - tMin) / (tMax - tMin)) * (w - padX * 2); }
+    function yFor(v) { return h - padY - ((v - min) / (max - min)) * (h - padY * 2); }
+
+    var d = points.map(function (p, i) {
+      return (i === 0 ? 'M' : 'L') + xFor(p.t).toFixed(2) + ',' + yFor(p.pnl == null ? 0 : p.pnl).toFixed(2);
+    }).join(' ');
+
+    var zeroY = yFor(0).toFixed(2);
+    var lineColor = pnls[pnls.length - 1] >= 0 ? 'var(--green)' : 'var(--red)';
+
+    var svg = '<svg class="chart" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img" aria-label="Accumulated profit and loss over time">' +
+      '<line x1="0" y1="' + zeroY + '" x2="' + w + '" y2="' + zeroY + '" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4" />' +
+      '<path d="' + d + '" fill="none" stroke="' + lineColor + '" stroke-width="2" />' +
+      '</svg>';
+    wrap.innerHTML = svg;
+
+    var svgEl = wrap.querySelector('svg');
+    var tooltip = null;
+
+    svgEl.addEventListener('mousemove', function (evt) {
+      var rect = svgEl.getBoundingClientRect();
+      var relX = (evt.clientX - rect.left) / rect.width * w;
+      var closest = points[0], closestDist = Infinity;
+      points.forEach(function (p) {
+        var dist = Math.abs(xFor(p.t) - relX);
+        if (dist < closestDist) { closestDist = dist; closest = p; }
+      });
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        wrap.appendChild(tooltip);
+      }
+      tooltip.style.left = ((xFor(closest.t) / w) * rect.width) + 'px';
+      tooltip.style.top = ((yFor(closest.pnl == null ? 0 : closest.pnl) / h) * rect.height) + 'px';
+      tooltip.textContent = new Date(closest.t).toLocaleString() + '  P/L ' + fmtUsd(closest.pnl);
+    });
+    svgEl.addEventListener('mouseleave', function () {
+      if (tooltip) { tooltip.remove(); tooltip = null; }
+    });
+  }
+
+  function loadPortfolio() {
+    return fetch('/api/portfolio').then(function (r) { return r.json(); }).then(function (data) {
+      state.rows = data.rows || [];
+      state.totals = data.totals;
+      populatePlatformFilter(state.rows);
+      renderSummary(data.totals, data.mode);
+      renderWarnings(data.warnings);
+      setStatusPill(data.mode);
+      var lu = document.getElementById('lastUpdated');
+      lu.textContent = data.lastUpdated ? 'updated ' + new Date(data.lastUpdated).toLocaleTimeString() : '';
+      renderTable();
+    }).catch(function (e) {
+      setStatusPill('error');
+      renderWarnings(['Failed to load portfolio: ' + e.message]);
+    });
+  }
+
+  function loadHistory() {
+    return fetch('/api/history').then(function (r) { return r.json(); }).then(function (data) {
+      state.history = data.points || [];
+      renderChart();
+    }).catch(function () {});
+  }
+
+  function poll() {
+    loadPortfolio();
+    loadHistory();
+  }
+
+  poll();
+  setInterval(poll, 15000);
+})();
+</script>
+</body>
+</html>
