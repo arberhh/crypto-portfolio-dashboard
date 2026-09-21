@@ -37,6 +37,8 @@ loadEnvFile(path.join(__dirname, '.env'));
 // Config
 // ---------------------------------------------------------------------------
 const CMC_API_KEY = process.env.CMC_API_KEY || '';
+const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || '';
+const HOST = process.env.HOST || '127.0.0.1';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const REFRESH_SECONDS = parseInt(process.env.REFRESH_SECONDS || '300', 10);
 const CMC_BASE_URL = (process.env.CMC_BASE_URL || 'https://pro-api.coinmarketcap.com').replace(/\/+$/, '');
@@ -480,7 +482,28 @@ function serveStatic(res, filePath) {
   });
 }
 
+function checkAuth(req, res) {
+  if (!DASHBOARD_PASSWORD) return true;
+  const header = req.headers['authorization'] || '';
+  const [scheme, encoded] = header.split(' ');
+  if (scheme === 'Basic' && encoded) {
+    const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+    const pass = decoded.slice(decoded.indexOf(':') + 1);
+    const given = crypto.createHash('sha256').update(pass).digest();
+    const expected = crypto.createHash('sha256').update(DASHBOARD_PASSWORD).digest();
+    if (crypto.timingSafeEqual(given, expected)) return true;
+  }
+  res.writeHead(401, {
+    'WWW-Authenticate': 'Basic realm="crypto-portfolio-dashboard"',
+    'Content-Type': 'text/plain',
+  });
+  res.end('Authentication required');
+  return false;
+}
+
 const server = http.createServer((req, res) => {
+  if (!checkAuth(req, res)) return;
+
   const url = new URL(req.url, 'http://127.0.0.1');
 
   if (req.method === 'GET' && url.pathname === '/') {
@@ -531,8 +554,8 @@ async function start() {
   } catch (e) {
     console.warn(`[startup] ${e.message}`);
   }
-  server.listen(PORT, '127.0.0.1', () => {
-    console.log(`crypto-portfolio-dashboard listening on http://127.0.0.1:${PORT} (demo=${!CMC_API_KEY})`);
+  server.listen(PORT, HOST, () => {
+    console.log(`crypto-portfolio-dashboard listening on http://${HOST}:${PORT} (demo=${!CMC_API_KEY})`);
   });
 }
 
