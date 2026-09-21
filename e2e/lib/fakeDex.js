@@ -1,7 +1,7 @@
 'use strict';
 const http = require('http');
 
-// Fake DexScreener server. pairsByMint: { [mint]: [{ liquidityUsd, priceUsd }, ...] }
+// Fake DexScreener server. pairsByMint: { [mint]: [{ liquidityUsd, priceUsd, change24h }, ...] }
 function createFakeDex(initialState) {
   const state = { status: 200, mode: 'normal', pairsByMint: {}, ...initialState };
   const log = [];
@@ -38,6 +38,7 @@ function createFakeDex(initialState) {
             quoteToken: { address: 'So11111111111111111111111111111111111111112', symbol: 'SOL', name: 'Solana' },
             priceUsd: String(p.priceUsd),
             liquidity: { usd: p.liquidityUsd },
+            ...(p.change24h != null ? { priceChange: { h24: p.change24h } } : {}),
           });
         }
       }
