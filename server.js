@@ -216,7 +216,8 @@ async function fetchDex(mints, minLiquidityUsd) {
     if (!qualifying.length) continue;
     qualifying.sort((a, b) => b.liquidity.usd - a.liquidity.usd);
     const price = parseFloat(qualifying[0].priceUsd);
-    if (Number.isFinite(price)) result[mint] = { price };
+    const change24h = qualifying[0].priceChange && Number.isFinite(qualifying[0].priceChange.h24) ? qualifying[0].priceChange.h24 : null;
+    if (Number.isFinite(price)) result[mint] = { price, change24h };
   }
   return result;
 }
@@ -344,7 +345,7 @@ function resolvePrice(h) {
   if (h.mint) {
     const d = cache.dex[h.mint];
     if (d && d.price != null) {
-      return { price: d.price, source: 'dex', status: cache.dexStale ? 'stale' : 'live', change24h: null };
+      return { price: d.price, source: 'dex', status: cache.dexStale ? 'stale' : 'live', change24h: d.change24h };
     }
   }
   if (h.fallbackPriceUsd != null) {

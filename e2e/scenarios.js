@@ -317,6 +317,33 @@ scenario('dex-multi-pair', async () => {
       eq(ccc.priceSource, 'dex', 'dex price wins');
       close(ccc.price, 1.5, 'highest liquidity pair wins');
       close(ccc.value, 150, 'value uses winning pair price');
+      eq(ccc.change24h, null, 'no priceChange on winning pair means null, not the losing pairs value');
+      return { requests: allRequests(fakeCmc, fakeDex), response: res.json };
+    }
+  );
+});
+
+scenario('dex-price-change', async () => {
+  return withRig(
+    {
+      name: 'dexpricechange',
+      cmcState: {},
+      dexState: {
+        pairsByMint: {
+          [MINT]: [
+            { liquidityUsd: 5000, priceUsd: 1.1, change24h: 3.5 },
+            { liquidityUsd: 20000, priceUsd: 1.2, change24h: -7.25 },
+          ],
+        },
+      },
+      holdings: dexHoldings(MINT),
+      envOverrides: { CMC_API_KEY: 'k' },
+    },
+    async ({ server, fakeCmc, fakeDex }) => {
+      const res = await httpJson(server.baseUrl, '/api/portfolio');
+      const ccc = res.json.rows.find((r) => r.symbol === 'CCC');
+      eq(ccc.priceSource, 'dex', 'dex price wins');
+      close(ccc.change24h, -7.25, '24h change comes from the winning (highest liquidity) pair');
       return { requests: allRequests(fakeCmc, fakeDex), response: res.json };
     }
   );
