@@ -512,6 +512,16 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/app.css') {
+    serveStatic(res, path.join(PUBLIC_DIR, 'app.css'));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/app.js') {
+    serveStatic(res, path.join(PUBLIC_DIR, 'app.js'));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/portfolio') {
     ensureFresh()
       .then(() => {

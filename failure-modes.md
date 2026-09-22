@@ -77,4 +77,11 @@ Scenario ids match the `name` field written into `e2e/artifacts/report.json`.
 
 | # | Failure | Scenario id | Expected behavior |
 |---|---------|-------------|--------------------|
-| 10.1 | API key must never leak | `no-key-leak` | `CMC_API_KEY` value never appears in any `/api/*` response body or header, and never in `/`. |
+| 10.1 | API key must never leak | `no-key-leak` | `CMC_API_KEY` value never appears in any `/api/*` response body or header, and never in `/`, `/app.css` or `/app.js`. |
+
+## 11. Static asset routes
+
+| # | Failure | Scenario id | Expected behavior |
+|---|---------|-------------|--------------------|
+| 11.1 | A stylesheet or script route stops serving | `static-assets` | `/app.css` and `/app.js` return 200 with the correct `Content-Type`, so the page is never served unstyled or inert. |
+| 11.2 | A request path tries to escape the public directory | `static-assets` | Asset routes are exact-match against hardcoded filenames, so no request path ever reaches `path.join`; traversal attempts fall through to the 404 handler and never expose repo files. |
