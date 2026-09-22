@@ -5,8 +5,6 @@
 - Frontend: markup, styles and behaviour live in three separate files — `public/index.html`,
   `public/app.css`, `public/app.js`. Still no build step, no bundler, no dependencies: the files
   are served as-is.
-  - _Not applied yet: `index.html` is still a single inline file. Delete this note as part of the
-    split._
 - Serve static assets with exact-match routes (`url.pathname === '/app.css'`) pointing at
   hardcoded paths — never a generic handler that joins the request path onto a directory. Keeping
   user input out of `path.join` is what removes the path-traversal surface, which matters now that

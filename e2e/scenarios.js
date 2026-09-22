@@ -561,11 +561,45 @@ scenario('no-key-leak', async () => {
       const portfolio = await httpJson(server.baseUrl, '/api/portfolio');
       const history = await httpJson(server.baseUrl, '/api/history');
       const index = await httpJson(server.baseUrl, '/');
-      for (const res of [portfolio, history, index]) {
+      const css = await httpJson(server.baseUrl, '/app.css');
+      const js = await httpJson(server.baseUrl, '/app.js');
+      for (const res of [portfolio, history, index, css, js]) {
         truthy(!res.body.includes(SECRET_KEY), 'response body does not contain API key');
         truthy(!JSON.stringify(res.headers).includes(SECRET_KEY), 'response headers do not contain API key');
       }
-      return { requests: allRequests(fakeCmc, fakeDex), response: { checked: 3, leaked: false } };
+      return { requests: allRequests(fakeCmc, fakeDex), response: { checked: 5, leaked: false } };
+    }
+  );
+});
+
+scenario('static-assets', async () => {
+  return withRig(
+    { name: 'staticassets', cmcState: {}, holdings: twoAssetHoldings(), envOverrides: { CMC_API_KEY: 'k' } },
+    async ({ server, fakeCmc, fakeDex }) => {
+      const css = await httpJson(server.baseUrl, '/app.css');
+      eq(css.status, 200, 'stylesheet is served');
+      eq(css.headers['content-type'], 'text/css; charset=utf-8', 'stylesheet MIME type');
+      truthy(css.body.includes(':root'), 'stylesheet body is the real CSS');
+
+      const js = await httpJson(server.baseUrl, '/app.js');
+      eq(js.status, 200, 'script is served');
+      eq(js.headers['content-type'], 'text/javascript; charset=utf-8', 'script MIME type');
+      truthy(js.body.includes("'use strict'"), 'script body is the real JS');
+
+      // Exact-match routing means no request path reaches path.join, so traversal attempts 404.
+      const traversals = ['/app.css/../server.js', '/%2e%2e/server.js', '/../holdings.json'];
+      const statuses = [];
+      for (const attempt of traversals) {
+        const res = await httpJson(server.baseUrl, attempt);
+        eq(res.status, 404, `traversal attempt is refused: ${attempt}`);
+        truthy(!res.body.includes('CMC_API_KEY'), 'traversal attempt does not expose server source');
+        statuses.push(res.status);
+      }
+
+      return {
+        requests: allRequests(fakeCmc, fakeDex),
+        response: { cssStatus: css.status, jsStatus: js.status, traversalStatuses: statuses },
+      };
     }
   );
 });

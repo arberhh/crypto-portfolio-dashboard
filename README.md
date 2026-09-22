@@ -2,7 +2,8 @@
 
 A local, single-process crypto portfolio dashboard. One Node.js file (`server.js`, Node 18+
 built-ins only, no framework, no build step, no runtime dependencies) serves a static page and a
-small JSON API. The frontend (`public/index.html`) is a single file with inline CSS and vanilla JS.
+small JSON API. The frontend is plain markup, CSS and vanilla JS (`public/index.html`,
+`public/app.css`, `public/app.js`), served as-is with no build step.
 
 ## Setup
 
@@ -101,6 +102,6 @@ runs don't hash identically or if the hash doesn't match the committed `e2e/gold
 - `server.js` — the whole backend.
 - `holdings.json` — seed portfolio data.
 - `docs/HOLDINGS.md` — plain-language guide to editing `holdings.json`.
-- `public/index.html` — the whole frontend.
+- `public/index.html`, `public/app.css`, `public/app.js` — the whole frontend.
 - `e2e/` — the E2E harness, fakes, scenarios, and artifacts.
 - `.env.example`, `.gitignore` — config templates.
