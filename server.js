@@ -502,6 +502,32 @@ function checkAuth(req, res) {
   return false;
 }
 
+// Kept off the request handler so the router stays synchronous and a rejection
+// here can never escape as an unhandled one.
+async function sendPortfolio(res) {
+  try {
+    await ensureFresh();
+    let parsed;
+    try {
+      parsed = loadHoldingsRaw();
+    } catch (e) {
+      sendJson(res, 200, {
+        generatedAt: now(),
+        mode: 'error',
+        demoMode: cache.demoMode,
+        lastUpdated: cache.lastAttemptAt,
+        warnings: [...startupWarnings, `holdings.json is invalid: ${e.message}`],
+        rows: [],
+        totals: { value: 0, cost: 0, pnl: 0, pnlPct: null, valueWithoutCost: 0, coverage: 0 },
+      });
+      return;
+    }
+    sendJson(res, 200, buildPortfolio(parsed.holdings));
+  } catch (e) {
+    sendJson(res, 500, { error: redact(e.message) });
+  }
+}
+
 const server = http.createServer((req, res) => {
   if (!checkAuth(req, res)) return;
 
@@ -523,29 +549,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/portfolio') {
-    ensureFresh()
-      .then(() => {
-        let parsed;
-        try {
-          parsed = loadHoldingsRaw();
-        } catch (e) {
-          sendJson(res, 200, {
-            generatedAt: now(),
-            mode: 'error',
-            demoMode: cache.demoMode,
-            lastUpdated: cache.lastAttemptAt,
-            warnings: [...startupWarnings, `holdings.json is invalid: ${e.message}`],
-            rows: [],
-            totals: { value: 0, cost: 0, pnl: 0, pnlPct: null, valueWithoutCost: 0, coverage: 0 },
-          });
-          return;
-        }
-        const portfolio = buildPortfolio(parsed.holdings);
-        sendJson(res, 200, portfolio);
-      })
-      .catch((e) => {
-        sendJson(res, 500, { error: redact(e.message) });
-      });
+    sendPortfolio(res);
     return;
   }
 

@@ -204,28 +204,35 @@
     });
   }
 
-  function loadPortfolio() {
-    return fetch('/api/portfolio').then(function (r) { return r.json(); }).then(function (data) {
+  async function loadPortfolio() {
+    try {
+      const res = await fetch('/api/portfolio');
+      const data = await res.json();
       state.rows = data.rows || [];
       state.totals = data.totals;
       populatePlatformFilter(state.rows);
       renderSummary(data.totals, data.mode);
       renderWarnings(data.warnings);
       setStatusPill(data.mode);
-      var lu = document.getElementById('lastUpdated');
+      const lu = document.getElementById('lastUpdated');
       lu.textContent = data.lastUpdated ? 'updated ' + new Date(data.lastUpdated).toLocaleTimeString() : '';
       renderTable();
-    }).catch(function (e) {
+    } catch (e) {
       setStatusPill('error');
       renderWarnings(['Failed to load portfolio: ' + e.message]);
-    });
+    }
   }
 
-  function loadHistory() {
-    return fetch('/api/history').then(function (r) { return r.json(); }).then(function (data) {
+  async function loadHistory() {
+    try {
+      const res = await fetch('/api/history');
+      const data = await res.json();
       state.history = data.points || [];
       renderChart();
-    }).catch(function () {});
+    } catch {
+      // The chart is secondary to the table, so a history failure leaves the
+      // last drawn chart in place rather than surfacing a warning.
+    }
   }
 
   function poll() {
