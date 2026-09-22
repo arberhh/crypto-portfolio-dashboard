@@ -46,6 +46,11 @@ If nobody has the dashboard open, there are **zero** upstream calls — the lazy
 when a request actually arrives. Lower `REFRESH_SECONDS` for fresher prices at the cost of more
 credits; raise it to spend fewer credits.
 
+## Editing your holdings
+
+See [`docs/HOLDINGS.md`](docs/HOLDINGS.md) for a plain-language guide to `holdings.json` — no
+coding knowledge required, includes a copy-paste AI prompt for generating new entries.
+
 ## Filling in the TODOs
 
 `holdings.json` ships with a few Solana holdings that have `"mint": null` and a `_mintTodo` note:
@@ -94,6 +99,7 @@ runs don't hash identically or if the hash doesn't match the committed `e2e/gold
 - `failure-modes.md` — every failure mode this system can hit, written before the code.
 - `server.js` — the whole backend.
 - `holdings.json` — seed portfolio data.
+- `docs/HOLDINGS.md` — plain-language guide to editing `holdings.json`.
 - `public/index.html` — the whole frontend.
 - `e2e/` — the E2E harness, fakes, scenarios, and artifacts.
 - `.env.example`, `.gitignore` — config templates.
