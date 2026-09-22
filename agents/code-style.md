@@ -20,3 +20,5 @@
 - The exception is a one-shot timer that always fires and whose callback finishes the work, like
   the `delayMs` timers in the e2e fakes. Those need no handle; requiring one everywhere would be
   noise.
+- Use `async`/`await` rather than `.then()` chains, except at a top-level entry point that has no
+  async scope to await in — `main().catch(...)` in `e2e/run.js` stays as it is.
