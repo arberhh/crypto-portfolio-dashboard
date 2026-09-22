@@ -95,7 +95,8 @@ runs don't hash identically or if the hash doesn't match the committed `e2e/gold
 
 ## Deliverables
 
-- `AGENTS.md` — project rules for future agents working on this repo.
+- `AGENTS.md` — essentials for future agents working on this repo, linking to `agents/` for details.
+- `agents/` — testing, code-style, and architecture conventions.
 - `failure-modes.md` — every failure mode this system can hit, written before the code.
 - `server.js` — the whole backend.
 - `holdings.json` — seed portfolio data.
