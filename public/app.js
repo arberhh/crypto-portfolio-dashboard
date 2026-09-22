@@ -233,6 +233,28 @@
     loadHistory();
   }
 
+  let pollTimer = null;
+
+  function startPolling() {
+    if (pollTimer !== null) return;
+    pollTimer = setInterval(poll, 15000);
+  }
+
+  function stopPolling() {
+    if (pollTimer === null) return;
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      stopPolling();
+      return;
+    }
+    poll();
+    startPolling();
+  });
+
   poll();
-  setInterval(poll, 15000);
+  startPolling();
 })();
