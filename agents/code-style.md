@@ -13,3 +13,10 @@
   boolean filters. Break them into named intermediate values instead.
 - One concern per file, for the same reason as one job per function. A file holding markup plus
   styles plus behaviour should be split along those seams rather than navigated by scrolling.
+- Keep the handle from every `setInterval`, and from every `setTimeout` that can outlive whatever
+  scheduled it, then clear it on the path that ends its purpose — `finally`, teardown, or page
+  unload. `fetchJson` in `server.js` is the reference: handle in a `const`, `clearTimeout` in
+  `finally`, so an early throw can't leave it pending.
+- The exception is a one-shot timer that always fires and whose callback finishes the work, like
+  the `delayMs` timers in the e2e fakes. Those need no handle; requiring one everywhere would be
+  noise.
