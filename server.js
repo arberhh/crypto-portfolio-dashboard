@@ -66,7 +66,15 @@ function redact(message) {
 // ---------------------------------------------------------------------------
 function loadHoldingsRaw() {
   const raw = fs.readFileSync(HOLDINGS_PATH, 'utf8');
-  const parsed = JSON.parse(raw);
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // Not e.message: V8's JSON.parse SyntaxError wording changed across Node
+    // versions, which would make responses (and the e2e golden hash) depend
+    // on which Node runs the process.
+    throw new Error('malformed JSON');
+  }
   if (!parsed || !Array.isArray(parsed.holdings)) {
     throw new Error('holdings.json must contain a "holdings" array');
   }

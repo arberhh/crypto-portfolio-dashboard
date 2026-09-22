@@ -48,7 +48,7 @@ Scenario ids match the `name` field written into `e2e/artifacts/report.json`.
 
 | # | Failure | Scenario id | Expected behavior |
 |---|---------|-------------|--------------------|
-| 6.1 | `holdings.json` is invalid JSON | `holdings-invalid-json` | `/api/portfolio` returns a clear error/warning instead of crashing the process; previously cached prices (if any) still served where possible. |
+| 6.1 | `holdings.json` is invalid JSON | `holdings-invalid-json` | `/api/portfolio` returns a clear error/warning instead of crashing the process; previously cached prices (if any) still served where possible. The warning is a fixed string (`"malformed JSON"`), not the native `JSON.parse` error text, so the response is identical regardless of which Node version parsed it. |
 | 6.2 | `holdings.json` is edited between two requests | `holdings-hot-reload` | The second request reflects the new holdings without restarting the server (re-read on every request). |
 
 ## 7. Concurrency
